@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Vending Machine Simulator</title>
+<style>
+  :root {
+    --body: #2b3a55;
+    --body-dark: #1c2638;
+    --glass: #9fd3e8;
+    --accent: #f5a524;
+    --lit: #7dff9a;
+    --off: #2a3a2f;
+    --bg: #eef1f6;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: system-ui, sans-serif;
+    background: radial-gradient(ellipse at top, #ffffff 0%, #e4e9f2 70%, #d3dae7 100%);
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center; padding: 24px;
+  }
+  .stage { position: relative; width: 360px; height: 560px; }
+  /* Layout: machine in the middle, magnifier callouts on the sides */
+  .layout { display: flex; align-items: center; gap: 32px; }
+  .side { display: flex; flex-direction: column; gap: 24px; align-items: center; }
+  .stage { position: relative; filter: drop-shadow(0 18px 22px rgba(10,20,40,.3)); }
+
+  /* Magnifier callouts: circular lens showing an enlarged copy of a region */
+  .lens {
+    width: 220px; height: 220px; border-radius: 50%; overflow: hidden;
+    border: 6px solid #1c2638; background: #fff;
+    box-shadow: 0 10px 24px rgba(10,20,40,.35), inset 0 0 0 2px rgba(255,255,255,.4), inset 0 0 30px rgba(0,0,0,.25);
+    position: relative;
+  }
+  .lens svg { position: absolute; width: 360px; height: 560px; }
+  .lens-label { font: 600 13px system-ui; color: #1c2638; text-align: center; margin-top: 6px; }
+  .lens-caption { font: 12px system-ui; color: #555; }
+
+  /* Connector lines drawn from machine region to each lens */
+  .connector { position: absolute; pointer-events: none; overflow: visible; }
+  .connector line { stroke: #1c2638; stroke-width: 1.5; stroke-dasharray: 4 3; opacity: .6; }
+
+  .test-bar { margin-top: 16px; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+  .test-bar button { padding: 8px 14px; font: 600 13px system-ui; border-radius: 6px;
+                     border: 1px solid #1c2638; background: #fff; cursor: pointer; }
+  .test-bar button:hover { background: #1c2638; color: #fff; }
+
+  /* Button components */
+  .btn { cursor: pointer; transition: fill .2s, filter .2s; }
+  .btn-body { fill: #5b73a3; stroke: #0b1220; stroke-width: 1.2; filter: drop-shadow(0 2px 1px rgba(0,0,0,.45)); }
+  .btn.lit .btn-body { fill: var(--lit); filter: drop-shadow(0 0 6px var(--lit)); }
+  .btn-label { fill: #fff; font: 600 12px system-ui; pointer-events: none; }
+
+  /* Indicator lights */
+  .light { fill: var(--off); transition: fill .3s, filter .3s; }
+  .light.on { fill: var(--lit); filter: drop-shadow(0 0 8px var(--lit)); }
+  .light.coin.on { fill: var(--accent); filter: drop-shadow(0 0 8px var(--accent)); }
+
+  /* Dispensing flap */
+  .flap { transform-box: fill-box; transform-origin: top center;
+          transition: transform .7s cubic-bezier(.4,0,.2,1); }
+  .flap.open { transform: rotateX(-110deg); }
+
+  /* Product that rolls out and fades in */
+  .product { opacity: 0; transform: translate(0, -40px); transition: opacity .8s ease, transform .8s ease; }
+  .product.drop { opacity: 1; transform: translate(0, 0); }
+  .product.fade-out { opacity: 0; transition: opacity .6s ease; }
+
+  .display { font: 600 14px monospace; fill: var(--lit); }
+</style>
+</head>
+<body>
+
+<div class="layout">
+<div class="side">
+  <div>
+    <div class="lens" id="lens-dispense"></div>
+    <div class="lens-label">Dispensing compartment</div>
+  </div>
+</div>
+
+<div>
+<div class="stage" id="stage">
+  <svg id="machine" viewBox="0 0 360 560" width="360" height="560" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="cabGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#3a4d70"/>
+        <stop offset="1" stop-color="#1a2438"/>
+      </linearGradient>
+      <linearGradient id="glassGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#d8f3ff"/>
+        <stop offset=".5" stop-color="#8fcbe6"/>
+        <stop offset="1" stop-color="#4f9cc4"/>
+      </linearGradient>
+      <linearGradient id="reflGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#fff" stop-opacity=".7"/>
+        <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+      </linearGradient>
+      <linearGradient id="shelfGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#8a9bb8"/>
+        <stop offset="1" stop-color="#3b4a66"/>
+      </linearGradient>
+    </defs>
+
+    <!-- Layer 1: machine cabinet -->
+    <g id="layer-cabinet">
+      <rect x="20" y="10" width="320" height="540" rx="18" fill="url(#cabGrad)" stroke="#0e1522" stroke-width="3"/>
+      <rect x="28" y="18" width="304" height="524" rx="14" fill="none" stroke="#5d7399" stroke-width="1" opacity=".5"/>
+      <rect x="40" y="40" width="200" height="330" rx="10" fill="url(#glassGrad)" stroke="#e8f7ff" stroke-width="3"/>
+      <path d="M48 48 L150 48 L60 200 L48 200 Z" fill="url(#reflGrad)" opacity=".8"/>
+      <path d="M160 48 L200 48 L120 240 L95 240 Z" fill="url(#reflGrad)" opacity=".35"/>
+    </g>
+
+    <!-- Layer 2: product display (reusable product slots) -->
+    <g id="layer-shelves">
+      <rect x="50" y="146" width="190" height="8" rx="2" fill="url(#shelfGrad)"/>
+      <rect x="50" y="246" width="190" height="8" rx="2" fill="url(#shelfGrad)"/>
+      <rect x="50" y="331" width="190" height="8" rx="2" fill="url(#shelfGrad)"/>
+    </g>
+    <g id="layer-products">
+      <g id="slot-A1"><rect x="55" y="70" width="40" height="70" rx="4" fill="#e74c3c"/><text x="75" y="112" text-anchor="middle" fill="#fff" font-size="10">A1</text></g>
+      <g id="slot-A2"><rect x="105" y="70" width="40" height="70" rx="4" fill="#3498db"/><text x="125" y="112" text-anchor="middle" fill="#fff" font-size="10">A2</text></g>
+      <g id="slot-A3"><rect x="155" y="70" width="40" height="70" rx="4" fill="#2ecc71"/><text x="175" y="112" text-anchor="middle" fill="#fff" font-size="10">A3</text></g>
+      <g id="slot-B1"><rect x="55" y="170" width="40" height="70" rx="4" fill="#9b59b6"/><text x="75" y="212" text-anchor="middle" fill="#fff" font-size="10">B1</text></g>
+      <g id="slot-B2"><rect x="105" y="170" width="40" height="70" rx="4" fill="#f39c12"/><text x="125" y="212" text-anchor="middle" fill="#fff" font-size="10">B2</text></g>
+      <g id="slot-B3"><rect x="155" y="170" width="40" height="70" rx="4" fill="#1abc9c"/><text x="175" y="212" text-anchor="middle" fill="#fff" font-size="10">B3</text></g>
+    </g>
+
+    <!-- Layer 3: button panel -->
+    <g id="layer-buttons">
+      <rect x="260" y="60" width="60" height="300" rx="6" fill="#1c2638"/>
+      <g class="btn" id="btn-A1" data-code="A1" transform="translate(270,70)"><rect class="btn-body" width="40" height="24" rx="4"/><text class="btn-label" x="20" y="16" text-anchor="middle">A1</text></g>
+      <g class="btn" id="btn-A2" data-code="A2" transform="translate(270,104)"><rect class="btn-body" width="40" height="24" rx="4"/><text class="btn-label" x="20" y="16" text-anchor="middle">A2</text></g>
+      <g class="btn" id="btn-A3" data-code="A3" transform="translate(270,138)"><rect class="btn-body" width="40" height="24" rx="4"/><text class="btn-label" x="20" y="16" text-anchor="middle">A3</text></g>
+      <g class="btn" id="btn-B1" data-code="B1" transform="translate(270,172)"><rect class="btn-body" width="40" height="24" rx="4"/><text class="btn-label" x="20" y="16" text-anchor="middle">B1</text></g>
+      <g class="btn" id="btn-B2" data-code="B2" transform="translate(270,206)"><rect class="btn-body" width="40" height="24" rx="4"/><text class="btn-label" x="20" y="16" text-anchor="middle">B2</text></g>
+      <g class="btn" id="btn-B3" data-code="B3" transform="translate(270,240)"><rect class="btn-body" width="40" height="24" rx="4"/><text class="btn-label" x="20" y="16" text-anchor="middle">B3</text></g>
+      <rect x="270" y="290" width="40" height="18" rx="3" fill="#111"/>
+      <text class="display" x="290" y="303" text-anchor="middle" id="display">0.00</text>
+    </g>
+
+    <!-- Layer 4: indicator lights -->
+    <g id="layer-lights">
+      <circle class="light coin" id="light-coin" cx="275" cy="380" r="7"/>
+      <circle class="light" id="light-vend" cx="300" cy="380" r="7"/>
+      <circle class="light" id="light-error" cx="325" cy="380" r="7"/>
+    </g>
+
+    <!-- Layer 5: dispensing compartment -->
+    <g id="layer-dispenser">
+      <rect x="40" y="390" width="280" height="90" rx="6" fill="#111" stroke="#000" stroke-width="2"/>
+      <g id="dispense-tray">
+        <rect x="150" y="400" width="60" height="70" rx="4" fill="#0a0f18"/>
+      </g>
+      <g id="dispense-flap" class="flap">
+        <rect x="140" y="390" width="80" height="12" rx="2" fill="#7a8aa6" stroke="#333"/>
+      </g>
+      <g id="product-out" class="product">
+        <rect id="out-item" x="155" y="420" width="50" height="50" rx="5" fill="#e74c3c"/>
+      </g>
+    </g>
+  </svg>
+</div>
+
+<div class="test-bar">
+  <button onclick="VendingUI.pressButton('A1')">Test press A1</button>
+  <button onclick="VendingUI.pressButton('B2')">Test press B2</button>
+  <button onclick="VendingUI.dispense('A1','#e74c3c')">Test dispense A1</button>
+  <button onclick="VendingUI.dispense('B2','#f39c12')">Test dispense B2</button>
+</div>
+</div>
+
+<div class="side">
+  <div>
+    <div class="lens" id="lens-buttons"></div>
+    <div class="lens-label">Button panel</div>
+  </div>
+</div>
+</div>
+
+
+<script>
+/*
+  VendingUI: public API for the Mealy/Moore simulator.
+  Methods:
+    pressButton(code, ms)    -> lights button, returns Promise
+    setIndicator(name, on)   -> name: 'coin' | 'vend' | 'error'
+    dispense(code, product)  -> opens flap, rolls product out, closes flap
+    setDisplay(text)
+    zoom(target)             -> 'buttons' | 'dispense' | 'reset'
+*/
+const VendingUI = (() => {
+  const stage = document.getElementById('stage');
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  const $ = id => document.getElementById(id);
+
+  // Build each lens by cloning the machine SVG and shifting it so the
+  // target region is centered in the circle. Clones share classes/ids
+  // stripped of duplicates, so state is mirrored via syncAll().
+  // Each lens holds a clone of the machine (IDs stripped, so lookups use
+  // querySelector within the clone). The clone is scaled and offset so the
+  // target region (cx, cy in machine coordinates) sits at the lens center.
+  function buildLens(lensId, cx, cy, scale) {
+    const lens = $(lensId);
+    const clone = $('machine').cloneNode(true);
+    clone.removeAttribute('id');
+    clone.classList.add('lens-clone');
+    clone.style.width = (360 * scale) + 'px';
+    clone.style.height = (560 * scale) + 'px';
+    clone.style.left = (110 - cx * scale) + 'px';
+    clone.style.top = (110 - cy * scale) + 'px';
+    lens.appendChild(clone);
+    return clone;
+  }
+  const lensClones = {};
+  lensClones.buttons = buildLens('lens-buttons', 290, 167, 1.0);
+  lensClones.dispense = buildLens('lens-dispense', 180, 435, 0.7);
+
+  // Mirror state onto every lens copy so they stay in sync with the machine
+  // Scope each update to the main machine and each lens clone explicitly.
+  // (document.querySelector would hit the clone first, since lenses precede the machine in the DOM.)
+  function syncAll(fn) {
+    fn($('machine'));
+    Object.values(lensClones).forEach(c => c && fn(c));
+  }
+
+  return {
+    async pressButton(code, ms = 600) {
+      syncAll(root => root.querySelector('#btn-' + code)?.classList.add('lit'));
+      await wait(ms);
+      syncAll(root => root.querySelector('#btn-' + code)?.classList.remove('lit'));
+    },
+    setIndicator(name, on) {
+      syncAll(root => root.querySelector('#light-' + name)?.classList.toggle('on', !!on));
+    },
+    setDisplay(text) { syncAll(root => { const d = root.querySelector('#display'); if (d) d.textContent = text; }); },
+    async dispense(code, color) {
+      syncAll(root => {
+        const item = root.querySelector('#out-item');
+        if (color && item) item.setAttribute('fill', color);
+        root.querySelector('#product-out')?.classList.remove('fade-out', 'drop');
+        root.querySelector('#dispense-flap')?.classList.add('open');
+      });
+      await wait(700);
+      syncAll(root => root.querySelector('#product-out')?.classList.add('drop'));
+      await wait(900);
+      syncAll(root => root.querySelector('#product-out')?.classList.add('fade-out'));
+      await wait(600);
+      syncAll(root => {
+        root.querySelector('#product-out')?.classList.remove('drop', 'fade-out');
+        root.querySelector('#dispense-flap')?.classList.remove('open');
+      });
+    },
+    zoom(target) {
+      stage.classList.remove('zoom-buttons', 'zoom-dispense');
+      if (target === 'buttons') stage.classList.add('zoom-buttons');
+      if (target === 'dispense') stage.classList.add('zoom-dispense');
+    }
+  };
+})();
+
+// Example: Mealy-style transition (output depends on state + input)
+// Replace with your FSM driver.
+(async () => {
+  // VendingUI.setIndicator('coin', true);
+  // await VendingUI.pressButton('A1');
+  // await VendingUI.dispense('A1', '#e74c3c');
+})();
+</script>
+</body>
+</html>

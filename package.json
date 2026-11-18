@@ -1,0 +1,29 @@
+{
+  "name": "automata-project-v2",
+  "version": "1.0.0",
+  "description": "Smart Vending Machine Mealy and Moore FSM Simulator with Interactive Visuals & Full Automata Backend",
+  "private": true,
+  "scripts": {
+    "install:all": "cd backend && pnpm install && cd \"../Vending Machine FSM Simulator Frontend\" && pnpm install",
+    "dev": "node -e \"const { spawn } = require('child_process'); spawn('npm', ['run', 'dev'], { cwd: 'backend', stdio: 'inherit', shell: true }); spawn('npm', ['run', 'dev'], { cwd: 'Vending Machine FSM Simulator Frontend', stdio: 'inherit', shell: true });\"",
+    "dev:backend": "cd backend && pnpm dev",
+    "dev:frontend": "cd \"Vending Machine FSM Simulator Frontend\" && pnpm dev",
+    "build": "cd backend && pnpm build && cd \"../Vending Machine FSM Simulator Frontend\" && pnpm build",
+    "build:backend": "cd backend && pnpm build",
+    "build:frontend": "cd \"Vending Machine FSM Simulator Frontend\" && pnpm build",
+    "start": "cd backend && pnpm start",
+    "test": "cd backend && npx tsx --test tests/**/*.test.ts && cd \"../Vending Machine FSM Simulator Frontend\" && node --test src/fsm.test.ts",
+    "test:backend": "cd backend && npx tsx --test tests/**/*.test.ts",
+    "test:frontend": "cd \"Vending Machine FSM Simulator Frontend\" && node --test src/fsm.test.ts"
+  },
+  "keywords": [
+    "finite-state-machine",
+    "fsm",
+    "mealy-machine",
+    "moore-machine",
+    "vending-machine",
+    "automata-theory"
+  ],
+  "author": "",
+  "license": "ISC"
+}

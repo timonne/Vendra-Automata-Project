@@ -1,0 +1,10 @@
+{
+  "description": "An interactive vending machine simulator for students and educators to explore, convert, and compare Mealy and Moore state machines through real-time transactions.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}

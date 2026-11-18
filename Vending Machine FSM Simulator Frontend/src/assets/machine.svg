@@ -1,0 +1,79 @@
+<svg id="machine" viewBox="0 0 360 560" width="360" height="560" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="cabGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#3a4d70"/>
+        <stop offset="1" stop-color="#1a2438"/>
+      </linearGradient>
+      <linearGradient id="glassGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#d8f3ff"/>
+        <stop offset=".5" stop-color="#8fcbe6"/>
+        <stop offset="1" stop-color="#4f9cc4"/>
+      </linearGradient>
+      <linearGradient id="reflGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#fff" stop-opacity=".7"/>
+        <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+      </linearGradient>
+      <linearGradient id="shelfGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#8a9bb8"/>
+        <stop offset="1" stop-color="#3b4a66"/>
+      </linearGradient>
+    </defs>
+
+    <!-- Layer 1: machine cabinet -->
+    <g id="layer-cabinet">
+      <rect x="20" y="10" width="320" height="540" rx="18" fill="url(#cabGrad)" stroke="#0e1522" stroke-width="3"/>
+      <rect x="28" y="18" width="304" height="524" rx="14" fill="none" stroke="#5d7399" stroke-width="1" opacity=".5"/>
+      <rect x="40" y="40" width="200" height="330" rx="10" fill="url(#glassGrad)" stroke="#e8f7ff" stroke-width="3"/>
+      <path d="M48 48 L150 48 L60 200 L48 200 Z" fill="url(#reflGrad)" opacity=".8"/>
+      <path d="M160 48 L200 48 L120 240 L95 240 Z" fill="url(#reflGrad)" opacity=".35"/>
+    </g>
+
+    <!-- Layer 2: product display (reusable product slots) -->
+    <g id="layer-shelves">
+      <rect x="50" y="146" width="190" height="8" rx="2" fill="url(#shelfGrad)"/>
+      <rect x="50" y="246" width="190" height="8" rx="2" fill="url(#shelfGrad)"/>
+      <rect x="50" y="331" width="190" height="8" rx="2" fill="url(#shelfGrad)"/>
+    </g>
+    <g id="layer-products">
+      <g id="slot-A1"><rect x="55" y="70" width="40" height="70" rx="4" fill="#e74c3c"/><text x="75" y="112" text-anchor="middle" fill="#fff" font-size="10">A1</text></g>
+      <g id="slot-A2"><rect x="105" y="70" width="40" height="70" rx="4" fill="#3498db"/><text x="125" y="112" text-anchor="middle" fill="#fff" font-size="10">A2</text></g>
+      <g id="slot-A3"><rect x="155" y="70" width="40" height="70" rx="4" fill="#2ecc71"/><text x="175" y="112" text-anchor="middle" fill="#fff" font-size="10">A3</text></g>
+      <g id="slot-B1"><rect x="55" y="170" width="40" height="70" rx="4" fill="#9b59b6"/><text x="75" y="212" text-anchor="middle" fill="#fff" font-size="10">B1</text></g>
+      <g id="slot-B2"><rect x="105" y="170" width="40" height="70" rx="4" fill="#f39c12"/><text x="125" y="212" text-anchor="middle" fill="#fff" font-size="10">B2</text></g>
+      <g id="slot-B3"><rect x="155" y="170" width="40" height="70" rx="4" fill="#1abc9c"/><text x="175" y="212" text-anchor="middle" fill="#fff" font-size="10">B3</text></g>
+    </g>
+
+    <!-- Layer 3: button panel -->
+    <g id="layer-buttons">
+      <rect x="260" y="60" width="60" height="300" rx="6" fill="#1c2638"/>
+      <g class="btn" id="btn-A1" data-code="A1" transform="translate(270,70)"><rect class="btn-body" width="40" height="24" rx="4"/><text class="btn-label" x="20" y="16" text-anchor="middle">A1</text></g>
+      <g class="btn" id="btn-A2" data-code="A2" transform="translate(270,104)"><rect class="btn-body" width="40" height="24" rx="4"/><text class="btn-label" x="20" y="16" text-anchor="middle">A2</text></g>
+      <g class="btn" id="btn-A3" data-code="A3" transform="translate(270,138)"><rect class="btn-body" width="40" height="24" rx="4"/><text class="btn-label" x="20" y="16" text-anchor="middle">A3</text></g>
+      <g class="btn" id="btn-B1" data-code="B1" transform="translate(270,172)"><rect class="btn-body" width="40" height="24" rx="4"/><text class="btn-label" x="20" y="16" text-anchor="middle">B1</text></g>
+      <g class="btn" id="btn-B2" data-code="B2" transform="translate(270,206)"><rect class="btn-body" width="40" height="24" rx="4"/><text class="btn-label" x="20" y="16" text-anchor="middle">B2</text></g>
+      <g class="btn" id="btn-B3" data-code="B3" transform="translate(270,240)"><rect class="btn-body" width="40" height="24" rx="4"/><text class="btn-label" x="20" y="16" text-anchor="middle">B3</text></g>
+      <rect x="270" y="290" width="40" height="18" rx="3" fill="#111"/>
+      <text class="display" x="290" y="303" text-anchor="middle" id="display">0.00</text>
+    </g>
+
+    <!-- Layer 4: indicator lights -->
+    <g id="layer-lights">
+      <circle class="light coin" id="light-coin" cx="275" cy="380" r="7"/>
+      <circle class="light" id="light-vend" cx="300" cy="380" r="7"/>
+      <circle class="light" id="light-error" cx="325" cy="380" r="7"/>
+    </g>
+
+    <!-- Layer 5: dispensing compartment -->
+    <g id="layer-dispenser">
+      <rect x="40" y="390" width="280" height="90" rx="6" fill="#111" stroke="#000" stroke-width="2"/>
+      <g id="dispense-tray">
+        <rect x="150" y="400" width="60" height="70" rx="4" fill="#0a0f18"/>
+      </g>
+      <g id="dispense-flap" class="flap">
+        <rect x="140" y="390" width="80" height="12" rx="2" fill="#7a8aa6" stroke="#333"/>
+      </g>
+      <g id="product-out" class="product">
+        <rect id="out-item" x="155" y="420" width="50" height="50" rx="5" fill="#e74c3c"/>
+      </g>
+    </g>
+  </svg>
